@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="id">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="only light" />
+		<title>Ton Mail</title>
+		<meta
+			name="description"
+			content="Email sementara gratis di @ton.my.id. Pilih nama apa saja, tanpa daftar, terhapus otomatis setelah 5 jam."
+		/>
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="apple-touch-icon" href="/icon.svg" />
+		<link rel="stylesheet" href="/client/style.css" />
+		<script src="/consent.js"></script>
+		<script type="module" src="/client/app.ts"></script>
+	</head>
+	<body>
+		<!-- Banner persetujuan: tampil sampai pengunjung menekan "Saya setuju" -->
+		<div
+			id="consent"
+			class="consent"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="consent-title"
+		>
+			<div class="consent-box">
+				<img src="/icon.svg" width="64" height="64" alt="" />
+				<h2 id="consent-title">Sebelum melanjutkan</h2>
+				<p>
+					Gunakan dengan risiko Anda sendiri. Inbox bersifat publik: siapa pun yang tahu nama
+					username bisa membacanya.
+				</p>
+				<p id="consent-limits">
+					Email akan dihapus otomatis dalam 5 jam. Hanya menerima, maksimal 5 MB per email.
+				</p>
+				<div class="consent-actions">
+					<button type="button" id="consent-agree" class="btn agree">Saya setuju</button>
+					<a id="consent-decline" class="btn decline" href="https://ton.my.id/">Tidak Setuju</a>
+				</div>
+			</div>
+		</div>
+
+		<div id="app" class="card">
+			<header class="card-head">
+				<a class="brand" href="/" data-link>
+					<img class="logo" src="/icon.svg" width="44" height="44" alt="" />
+					<span id="brand-name">Ton Mail</span>
+				</a>
+				<p class="tagline">Bijak dalam menggunakan ini</p>
+			</header>
+
+			<form id="open-form" class="open-form" autocomplete="off">
+				<label for="name-input" class="label">Username:</label>
+				<div class="address-input-group">
+					<input
+						id="name-input"
+						name="name"
+						type="text"
+						inputmode="email"
+						spellcheck="false"
+						autocapitalize="off"
+						placeholder="username"
+						maxlength="64"
+						required
+					/>
+					<span class="at" aria-hidden="true">@</span>
+					<select id="domain-select" aria-label="Domain">
+						<option value="ton.my.id">ton.my.id</option>
+					</select>
+				</div>
+				<div class="form-buttons">
+					<button type="submit" class="btn primary">Tampilkan Inbox</button>
+					<button type="button" id="random-btn" class="btn random">Username acak</button>
+				</div>
+			</form>
+
+			<p id="form-error" class="form-error" role="alert" hidden></p>
+
+			<div id="recent" class="recent" hidden>
+				<span class="recent-label">Terakhir dibuka:</span>
+				<span id="recent-list" class="recent-list"></span>
+				<button type="button" id="recent-clear" class="link-btn">hapus riwayat</button>
+			</div>
+
+			<hr />
+
+			<!-- Inbox -->
+			<section id="inbox" class="inbox" hidden>
+				<div class="inbox-bar">
+					<div class="address">
+						<span id="address-text" class="address-text"></span>
+						<button type="button" id="copy-btn" class="btn small">Salin</button>
+					</div>
+					<div class="inbox-actions">
+						<span id="status" class="status" aria-live="polite"></span>
+						<div class="auto-refresh">
+							<label><input type="checkbox" id="auto-toggle" checked /> Auto refresh</label>
+							<select id="auto-interval" aria-label="Interval auto refresh">
+								<option value="10">10 dtk</option>
+								<option value="15" selected>15 dtk</option>
+								<option value="30">30 dtk</option>
+								<option value="60">1 mnt</option>
+							</select>
+						</div>
+						<label
+							id="notify-wrap"
+							class="toggle-box"
+							title="Tampilkan notifikasi saat email baru masuk dan tab ini tidak sedang dilihat. Tab harus tetap terbuka dan auto refresh aktif."
+						>
+							<input type="checkbox" id="notify-toggle" /> Notifikasi
+						</label>
+						<button type="button" id="refresh-btn" class="btn small">Muat ulang</button>
+					</div>
+				</div>
+
+				<div class="panes" id="panes">
+					<div class="list-pane">
+						<ul id="message-list" class="message-list" aria-label="Daftar email"></ul>
+						<div id="empty" class="empty" hidden>
+							<p><strong>Belum ada email.</strong></p>
+							<p id="empty-hint">Inbox diperiksa otomatis setiap 15 detik.</p>
+						</div>
+					</div>
+
+					<article id="reader" class="reader" hidden>
+						<div class="reader-head">
+							<button type="button" id="back-btn" class="btn small back">← Kembali</button>
+							<h2 id="r-subject"></h2>
+							<dl class="meta">
+								<dt>Dari</dt>
+								<dd id="r-from"></dd>
+								<dt>Kepada</dt>
+								<dd id="r-to"></dd>
+								<dt>Waktu</dt>
+								<dd id="r-date"></dd>
+								<dt>Terhapus</dt>
+								<dd id="r-expire"></dd>
+							</dl>
+							<div id="r-otp" class="otp-box" hidden>
+								<span>Kode verifikasi:</span>
+								<strong id="r-otp-code" class="otp-code"></strong>
+								<button type="button" id="r-otp-copy" class="btn small">Salin kode</button>
+							</div>
+							<div class="reader-actions">
+								<button type="button" id="images-btn" class="btn small" hidden>
+									Tampilkan gambar eksternal
+								</button>
+								<button type="button" id="raw-btn" class="btn small">Sumber</button>
+								<button type="button" id="delete-btn" class="btn small danger">Hapus</button>
+							</div>
+							<ul id="r-attachments" class="attachments" hidden></ul>
+						</div>
+						<iframe
+							id="r-body"
+							class="reader-body"
+							title="Isi email"
+							sandbox="allow-popups allow-popups-to-escape-sandbox"
+							referrerpolicy="no-referrer"
+						></iframe>
+					</article>
+
+					<div id="placeholder" class="placeholder">Pilih email untuk membacanya.</div>
+				</div>
+			</section>
+
+			<div id="welcome" class="welcome">
+				<p>
+					Masukkan username di atas atau klik <strong>Username acak</strong> untuk langsung membuat
+					alamat email sementara di <strong>@ton.my.id</strong>.
+				</p>
+			</div>
+
+			<footer class="foot">
+				<p>
+					Gunakan dengan risiko Anda sendiri. Inbox bersifat publik: siapa pun yang tahu nama
+					username bisa membacanya.
+				</p>
+				<p id="foot-limits">
+					Email akan dihapus otomatis dalam 5 jam. Hanya menerima, maksimal 5 MB per email.
+				</p>
+			</footer>
+		</div>
+
+		<!-- Modal Sumber Email (Raw MIME) -->
+		<div
+			id="raw-modal"
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="raw-modal-title"
+			hidden
+		>
+			<div class="modal-backdrop" id="raw-backdrop"></div>
+			<div class="modal-box">
+				<div class="modal-head">
+					<h3 id="raw-modal-title">Sumber Email (RFC 5322)</h3>
+					<div class="modal-actions">
+						<button type="button" id="raw-copy-btn" class="btn small">Salin</button>
+						<a id="raw-download-btn" class="btn small" href="#" download>Unduh .eml</a>
+						<button type="button" id="raw-close-btn" class="btn small">Tutup</button>
+					</div>
+				</div>
+				<pre id="raw-content" class="raw-content"></pre>
+			</div>
+		</div>
+	</body>
+</html>
